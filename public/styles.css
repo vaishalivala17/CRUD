@@ -1,0 +1,238 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #000000;
+  color: #ffffff;
+  line-height: 1.6;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2.5rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.section {
+  background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  border: 1px solid #444;
+}
+
+h2 {
+  color: #ffffff;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #666;
+  padding-bottom: 10px;
+}
+
+/* Form Styles */
+#productForm {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+input, select {
+  padding: 12px;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #888;
+  box-shadow: 0 0 8px rgba(255,255,255,0.2);
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #444;
+  color: #fff;
+}
+
+button:hover {
+  background: #666;
+  transform: translateY(-2px);
+}
+
+.btn-submit {
+  background: #000;
+  border: 2px solid #fff;
+}
+
+.btn-submit:hover {
+  background: #fff;
+  color: #000;
+}
+
+.btn-reset, .btn-search {
+  background: #555;
+}
+
+/* Search & Controls */
+.search-controls {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #444;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1a1a1a;
+}
+
+th {
+  background: #111;
+  color: #fff;
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #333;
+  position: sticky;
+  top: 0;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #333;
+}
+
+tr:nth-child(even) {
+  background: #222;
+}
+
+tr:hover {
+  background: #333;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-active {
+  background: #000;
+  color: #fff;
+  border: 1px solid #fff;
+}
+
+.status-inactive {
+  background: #333;
+  color: #ccc;
+  border: 1px solid #666;
+}
+
+img {
+  max-width: 60px;
+  max-height: 60px;
+  border-radius: 4px;
+  border: 1px solid #555;
+}
+
+/* Actions */
+.btn-edit {
+  background: #555;
+  margin-right: 8px;
+}
+
+.btn-delete {
+  background: #333;
+}
+
+/* Bulk Actions */
+#bulkActions {
+  display: none;
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #222;
+  border-radius: 6px;
+  border: 1px solid #444;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+#pageInfo {
+  font-weight: 600;
+  color: #ccc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  #productForm {
+    grid-template-columns: 1fr;
+  }
+
+  .search-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  th, td {
+    padding: 8px 6px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #fff;
+}

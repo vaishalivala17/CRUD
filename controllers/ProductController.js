@@ -1,158 +1,205 @@
 const Product = require('../models/Product');
 
-// Get all products
+// Manual validation
+const validateProduct = (data) => {
+  const errors = [];
+  
+  if (!data.name || data.name.trim().length === 0) {
+    errors.push('Name is required');
+  }
+  
+  if (!data.phone || data.phone.length < 10) {
+    errors.push('Valid phone is required');
+  }
+  
+  if (data.image && !data.image.startsWith('http')) {
+    errors.push('Image must be valid URL');
+  }
+  
+  if (typeof data.status !== 'boolean') {
+    errors.push('Status must be boolean');
+  }
+  
+  return errors.length === 0 ? true : errors;
+};
+
+// GET /api/products?page=1&limit=10&search=term
 exports.getAllProducts = async (req, res) => {
   try {
-    const { search, page = 1, limit = 5 } = req.query;
-    
-    let query = { isDeleted: false };
-    
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const skip = (page - 1) * limit;
+
+    const searchQuery = {
+      isDeleted: false
+    };
+
     if (search) {
-      query.name = search;
+      searchQuery.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } }
+      ];
     }
-    
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
-    const skip = (pageNum - 1) * limitNum;
-    
-    const total = await Product.countDocuments(query);
-    const products = await Product.find(query).skip(skip).limit(limitNum);
-    
+
+    const productsAggregate = Product.aggregate([
+      { $match: searchQuery },
+      { $sort: { created_date: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          name: 1,
+          email: 1,
+          phone: 1,
+          image: 1,
+          status: 1,
+          created_date: 1,
+          updated_date: 1
+        }
+      }
+    ]);
+
+    const countAggregate = Product.aggregate([
+      { $match: searchQuery },
+      { $count: 'total' }
+    ]);
+
+    const [productsResult, countResult] = await Promise.all([
+      productsAggregate.exec(),
+      countAggregate.exec()
+    ]);
+
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
     res.json({
       success: true,
+      products: productsResult,
+      page,
+      totalPages,
       total,
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(total / limitNum),
-      products
+      hasNext: page < totalPages,
+      hasPrev: page > 1
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Get all products error:', error);
+    res.status(500).json({ success: false, message: 'Server error fetching products' });
   }
 };
 
-// Get product by ID
+// GET /api/products/:id
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({ _id: req.params.id, isDeleted: false });
     
-    if (!product || product.isDeleted) {
+    if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-    
+
     res.json({ success: true, product });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Get product error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// Create product
+// POST /api/products
 exports.createProduct = async (req, res) => {
   try {
-    const { name, email, phone, image, status } = req.body;
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    const newProduct = new Product({
-      name,
-      email,
-      phone,
-      image: image || '',
-      status: status !== undefined ? status : true,
-      created_date: today,
-      updated_date: today
-    });
-    
-    const savedProduct = await newProduct.save();
-    
-    res.status(201).json({
-      success: true,
-      message: 'Product created successfully',
-      product: savedProduct
-    });
+    const validation = validateProduct(req.body);
+    if (validation !== true) {
+      return res.status(400).json({ success: false, message: validation.join(', ') });
+    }
+
+    const productData = {
+      ...req.body,
+      status: req.body.status !== false, // default true
+      created_date: new Date(),
+      updated_date: new Date()
+    };
+
+    const product = new Product(productData);
+    await product.save();
+
+    res.status(201).json({ success: true, product });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Create product error:', error);
+    res.status(500).json({ success: false, message: 'Server error creating product' });
   }
 };
 
-// Update product
+// PUT /api/products/:id
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    
-    if (!product || product.isDeleted) {
+    const validation = validateProduct(req.body);
+    if (validation !== true) {
+      return res.status(400).json({ success: false, message: validation.join(', ') });
+    }
+
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: false },
+      { 
+        $set: { 
+          ...req.body,
+          updated_date: new Date()
+        } 
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-    
-    const { name, email, phone, image, status } = req.body;
-    const today = new Date().toISOString().split('T')[0];
-    
-    if (name) product.name = name;
-    if (email) product.email = email;
-    if (phone) product.phone = phone;
-    if (image !== undefined) product.image = image;
-    if (status !== undefined) product.status = status;
-    product.updated_date = today;
-    
-    await product.save();
-    
-    res.json({
-      success: true,
-      message: 'Product updated successfully',
-      product
-    });
+
+    res.json({ success: true, product });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Update product error:', error);
+    res.status(500).json({ success: false, message: 'Server error updating product' });
   }
 };
 
-// Delete product (soft delete)
+// DELETE /api/products/:id (soft delete)
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-    
-    if (!product || product.isDeleted) {
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: false },
+      { $set: { isDeleted: true, updated_date: new Date() } },
+      { new: true }
+    );
+
+    if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-    
-    product.status = false;
-    product.isDeleted = true;
-    product.updated_date = new Date().toISOString().split('T')[0];
-    
-    await product.save();
-    
-    res.json({
-      success: true,
-      message: 'Product deleted successfully',
-      product
-    });
+
+    res.json({ success: true, message: 'Product deleted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Delete product error:', error);
+    res.status(500).json({ success: false, message: 'Server error deleting product' });
   }
 };
 
-// Bulk delete
+// POST /api/products/bulk-delete
 exports.bulkDelete = async (req, res) => {
   try {
     const { ids } = req.body;
-    
-    if (!ids || ids.length === 0) {
-      return res.status(400).json({ success: false, message: 'No IDs provided' });
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'IDs array required' });
     }
-    
-    const today = new Date().toISOString().split('T')[0];
-    
+
     const result = await Product.updateMany(
       { _id: { $in: ids }, isDeleted: false },
-      { $set: { status: false, isDeleted: true, updated_date: today } }
+      { $set: { isDeleted: true, updated_date: new Date() } }
     );
-    
-    res.json({
-      success: true,
-      message: `${result.modifiedCount} products deleted`,
-      deletedCount: result.modifiedCount
+
+    res.json({ 
+      success: true, 
+      message: `Deleted ${result.modifiedCount} products` 
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ success: false, message: 'Server error in bulk delete' });
   }
 };
+
