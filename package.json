@@ -4,6 +4,7 @@
   "description": "CRUD Operations with Node.js & MongoDB",
   "main": "server.js",
   "scripts": {
+    
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
