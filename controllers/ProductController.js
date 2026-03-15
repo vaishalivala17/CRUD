@@ -1,6 +1,5 @@
 const Product = require('../models/Product');
 
-// Manual validation
 const validateProduct = (data) => {
   const errors = [];
   
