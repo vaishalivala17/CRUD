@@ -14,7 +14,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// View engine (serve index.html directly)
 app.set('view engine', 'html');
 app.engine('html', (filePath, options, callback) => {
   // Simple HTML serving without templating
