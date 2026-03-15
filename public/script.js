@@ -40,7 +40,7 @@ function renderTable(products) {
     </tr>
   `).join('');
   
-  // Update bulk actions visibility
+
   updateBulkActions();
 }
 
