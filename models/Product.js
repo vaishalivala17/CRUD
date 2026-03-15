@@ -38,7 +38,7 @@ const productSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for performance and search
+
 productSchema.index({ name: 'text', email: 'text', phone: 'text' });
 productSchema.index({ isDeleted: 1 });
 productSchema.index({ created_date: -1 });
