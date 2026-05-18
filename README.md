@@ -131,9 +131,6 @@ CMD ["npm", "start"]
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push & PR
 
-## 📄 License
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
-
 ## 🙏 Acknowledgments
 - Built following Node.js/Express/MongoDB best practices
 
